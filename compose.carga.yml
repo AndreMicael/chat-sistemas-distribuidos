@@ -1,0 +1,19 @@
+# Acrescente este arquivo ao compose.yml somente para a carga curta de clientes.
+# docker compose -f compose.yml -f compose.carga.yml run --rm carga
+services:
+  carga:
+    image: node:22-slim
+    profiles: ["carga"]
+    working_dir: /load
+    volumes:
+      - ./scripts:/load:ro
+    command: ["node", "carga.mjs"]
+    environment:
+      TARGET_URL: http://chat:4000
+      CLIENTS: "${CARGA_CLIENTS:-15}"
+      MESSAGES: "${CARGA_MESSAGES:-20}"
+      ROOM_ID: "${CARGA_ROOM_ID:-geral}"
+      ROOM_KEY: "${CARGA_ROOM_KEY:-}"
+    depends_on:
+      chat:
+        condition: service_healthy

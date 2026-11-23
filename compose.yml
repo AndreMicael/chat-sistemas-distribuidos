@@ -1,0 +1,15 @@
+services:
+  chat:
+    build: .
+    ports:
+      - "${CHAT_BIND:-127.0.0.1}:${CHAT_PORT:-4000}:4000"
+    environment:
+      BIND_IP: "0.0.0.0"
+      PORT: "4000"
+      NODE_LABEL: "${NODE_LABEL:-}"
+    healthcheck:
+      test: ["CMD", "elixir", "--erl", "+S 1:1", "-e", "Application.ensure_all_started(:inets); case :httpc.request(~c\"http://127.0.0.1:4000/health\") do {:ok, {{_, 200, _}, _, _}} -> System.halt(0); _ -> System.halt(1) end"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

@@ -1,0 +1,8 @@
+_build
+deps
+.git
+.env
+.elixir_ls
+cover
+erl_crash.dump
+*.zip

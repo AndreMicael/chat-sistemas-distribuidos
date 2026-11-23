@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Chat Distribuído · Conversas</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <script type="module" src="/js/chat.js"></script>
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Chat Distribuído, início"><span class="brand-symbol" aria-hidden="true">c<span>:</span></span><span>Chat Distribuído<small>ELIXIR + PHOENIX</small></span></a>
+    <span class="stage-badge">Protótipo acadêmico <span>·</span> Pessoa 01</span>
+  </header>
+  <main class="workspace">
+    <aside class="sidebar" aria-label="Identificação e salas">
+      <div class="eyebrow">CONVERSAS EM TEMPO REAL</div>
+      <h1>Cada conversa,<br>no seu lugar.</h1>
+      <p class="intro">Crie uma sala, convide pessoas e comece a conversar.</p>
+      <section class="identity-card" aria-labelledby="identity-title">
+        <h2 id="identity-title">Seu espaço na conversa</h2>
+        <form id="join-form"><label for="nickname">Como podemos chamar você?</label><input id="nickname" name="usuario" maxlength="24" placeholder="Seu apelido" autocomplete="nickname" required><button id="join-button" type="submit">Entrar <span aria-hidden="true">→</span></button></form>
+        <div id="identity-active" hidden><p class="identity-caption">Você está conversando como</p><strong id="current-user"></strong><button id="leave-button" class="secondary" type="button">Sair</button></div>
+      </section>
+      <section id="rooms-section" class="rooms-section" aria-label="Suas salas" hidden>
+        <div class="room-actions"><button id="new-room" type="button">＋ Criar sala</button><button id="enter-private" class="outline" type="button">Entrar com chave</button></div>
+        <h2 class="list-heading">SALAS PÚBLICAS <span id="public-count">1</span></h2>
+        <div id="public-list" class="room-list"></div>
+        <div id="private-section" hidden><h2 class="list-heading">MEUS CHATS PRIVADOS</h2><div id="private-list" class="room-list"></div></div>
+      </section>
+      <section class="connection-card" aria-label="Informações da conexão">
+        <div class="info-row"><span>Conexão</span><strong id="status" data-state="offline">Desconectado</strong></div>
+        <div class="info-row"><span>Servidor atual</span><code id="node-name">—</code></div>
+        <div class="info-row"><span>Recebidas nesta aba</span><strong id="message-count">0</strong></div>
+      </section>
+      <p class="scope-note">Identificação por apelido · Salas temporárias neste protótipo.</p>
+    </aside>
+    <section class="chat-panel" aria-labelledby="room-title">
+      <header class="room-header"><div id="room-icon" class="room-icon" aria-hidden="true">#</div><div class="room-heading"><h2 id="room-title">Geral</h2><p id="room-description">Uma sala aberta para começar</p></div><div id="presence-badge" class="presence-badge" hidden><span class="presence-pulse" aria-hidden="true"></span><span id="presence-count">1 online</span></div><span id="room-tag" class="room-tag">PÚBLICA</span><button id="leave-room" class="text-button" type="button" hidden>Sair da sala</button></header>
+      <div id="online-users-bar" class="online-users-bar" hidden><span class="online-users-title">Online agora (CRDT):</span><div id="online-users-list" class="online-users-list"></div></div>
+      <div id="room-key-bar" class="key-bar" hidden><span>Compartilhe a chave para convidar</span><code id="room-key"></code><button id="copy-key" type="button">Copiar</button></div>
+      <div id="conversation" class="conversation" tabindex="0" aria-label="Conversa da sala selecionada"><div id="empty-state" class="empty-state"><div class="empty-symbol" aria-hidden="true">“</div><h3>A conversa começa com um olá.</h3><p>Escolha seu apelido para entrar.<br>Salas públicas e privadas, cada uma com sua conversa.</p></div><ol id="messages" class="messages" aria-label="Mensagens" aria-live="polite" aria-relevant="additions"></ol></div>
+      <div class="composer"><p id="notice" role="status" aria-live="polite">Informe seu apelido para entrar.</p><form id="message-form"><label class="sr-only" for="message-text">Sua mensagem</label><input id="message-text" name="texto" placeholder="Escreva uma mensagem…" maxlength="500" autocomplete="off" disabled required><button id="send-button" type="submit" disabled>Enviar <span aria-hidden="true">↗</span></button></form><div class="composer-footnote"><span>Enter para enviar · até 500 caracteres</span><span id="char-count">0/500</span></div></div>
+    </section>
+  </main>
+  <footer class="page-footer"><span>Pessoa 01 · Salas e mensagens</span><span>Histórico nesta aba · Salas temporárias</span></footer>
+</div>
+<dialog id="create-dialog" aria-labelledby="create-title"><form id="create-form"><div class="dialog-heading"><h2 id="create-title">Uma nova conversa</h2><button class="close-dialog" type="button" data-close="create-dialog" aria-label="Fechar">×</button></div><p>Dê um nome à sala e escolha quem pode entrar.</p><label for="room-name">Nome da sala</label><input id="room-name" maxlength="60" placeholder="Ex.: Grupo do trabalho" required><label for="room-type">Tipo de sala</label><select id="room-type"><option value="publica">Pública · todos podem entrar</option><option value="privada">Privada · entrada por chave</option></select><p id="create-error" class="dialog-error" role="alert"></p><button id="create-submit" type="submit">Criar e entrar</button></form></dialog>
+<dialog id="key-dialog" aria-labelledby="key-title"><form id="key-form"><div class="dialog-heading"><h2 id="key-title">Entrar em sala privada</h2><button class="close-dialog" type="button" data-close="key-dialog" aria-label="Fechar">×</button></div><p>Peça a chave ao criador da sala.</p><label for="private-key">Chave de entrada</label><input id="private-key" maxlength="16" placeholder="Ex.: ABCD2345" autocomplete="off" required><p id="key-error" class="dialog-error" role="alert"></p><button id="key-submit" type="submit">Entrar na conversa</button></form></dialog>
+</body>
+</html>

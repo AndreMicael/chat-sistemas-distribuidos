@@ -1,0 +1,8 @@
+* text=auto
+*.ex text eol=lf
+*.exs text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.yml text eol=lf
+Dockerfile text eol=lf

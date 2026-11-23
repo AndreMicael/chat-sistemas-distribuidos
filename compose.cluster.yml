@@ -1,0 +1,86 @@
+# Cluster de 3 nós BEAM distribuídos para a entrega e apresentação da Pessoa 02.
+# Execute:
+#   docker compose -f compose.cluster.yml up --build
+#
+# Acesse nós diferentes em abas ou navegadores distintos:
+#   - Nó 1: http://localhost:4001
+#   - Nó 2: http://localhost:4002
+#   - Nó 3: http://localhost:4003
+#
+# Para testar tolerância a falhas (Chaos Engineering):
+#   docker stop chat-2
+# e veja os clientes reconectando e o cluster operando normalmente nos nós 1 e 3!
+
+services:
+  chat-1:
+    build: .
+    container_name: chat-1
+    hostname: chat-1
+    ports:
+      - "4001:4000"
+    environment:
+      BIND_IP: "0.0.0.0"
+      PORT: "4000"
+      NODE_NAME: "chat1@chat-1"
+      COOKIE: "chat_sd_cookie"
+      CLUSTER_NODES: "chat1@chat-1,chat2@chat-2,chat3@chat-3"
+      NODE_LABEL: "Nó 1 (chat-1)"
+      ERL_FLAGS: "-sname chat1 -setcookie chat_sd_cookie"
+    networks:
+      - chat_cluster_net
+    healthcheck:
+      test: ["CMD", "elixir", "--erl", "+S 1:1", "-e", "Application.ensure_all_started(:inets); case :httpc.request(~c\"http://127.0.0.1:4000/health\") do {:ok, {{_, 200, _}, _, _}} -> System.halt(0); _ -> System.halt(1) end"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  chat-2:
+    build: .
+    container_name: chat-2
+    hostname: chat-2
+    ports:
+      - "4002:4000"
+    environment:
+      BIND_IP: "0.0.0.0"
+      PORT: "4000"
+      NODE_NAME: "chat2@chat-2"
+      COOKIE: "chat_sd_cookie"
+      CLUSTER_NODES: "chat1@chat-1,chat2@chat-2,chat3@chat-3"
+      NODE_LABEL: "Nó 2 (chat-2)"
+      ERL_FLAGS: "-sname chat2 -setcookie chat_sd_cookie"
+    networks:
+      - chat_cluster_net
+    healthcheck:
+      test: ["CMD", "elixir", "--erl", "+S 1:1", "-e", "Application.ensure_all_started(:inets); case :httpc.request(~c\"http://127.0.0.1:4000/health\") do {:ok, {{_, 200, _}, _, _}} -> System.halt(0); _ -> System.halt(1) end"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  chat-3:
+    build: .
+    container_name: chat-3
+    hostname: chat-3
+    ports:
+      - "4003:4000"
+    environment:
+      BIND_IP: "0.0.0.0"
+      PORT: "4000"
+      NODE_NAME: "chat3@chat-3"
+      COOKIE: "chat_sd_cookie"
+      CLUSTER_NODES: "chat1@chat-1,chat2@chat-2,chat3@chat-3"
+      NODE_LABEL: "Nó 3 (chat-3)"
+      ERL_FLAGS: "-sname chat3 -setcookie chat_sd_cookie"
+    networks:
+      - chat_cluster_net
+    healthcheck:
+      test: ["CMD", "elixir", "--erl", "+S 1:1", "-e", "Application.ensure_all_started(:inets); case :httpc.request(~c\"http://127.0.0.1:4000/health\") do {:ok, {{_, 200, _}, _, _}} -> System.halt(0); _ -> System.halt(1) end"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+networks:
+  chat_cluster_net:
+    driver: bridge
